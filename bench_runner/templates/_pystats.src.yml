@@ -90,9 +90,9 @@ jobs:
         uses: actions/checkout@v4
         if: ${{ steps.should_run.outputs.should_run != 'false' }}
         with:
-          repository: python/pyperformance
+          repository: mdboom/pyperformance
           path: pyperformance
-          ref: ${{ env.PYPERFORMANCE_HASH }}
+          ref: b4fa561b19ab9391cf61fa59c4aff50e1c7aace2
       - name: Create pystats directory
         if: ${{ steps.should_run.outputs.should_run != 'false' }}
         run: |
