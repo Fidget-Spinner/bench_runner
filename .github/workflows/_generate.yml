@@ -1,0 +1,59 @@
+# Generated file: !!! DO NOT EDIT !!!
+---
+env:
+  PYPERFORMANCE_HASH: f7f36509e2e81e9a20cfeadddd6608f2378ff26c
+  PYSTON_BENCHMARKS_HASH: ee8adbd7846ec67d1a8a362e6a5e876df372431d
+name: _generate
+on:
+  workflow_call:
+    inputs:
+      force:
+        type: boolean
+        default: false
+      dry_run:
+        type: boolean
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Regenerate all of the derived data, even if it already exists
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Dry run: Do not commit to the repo'
+        type: boolean
+        default: false
+
+jobs:
+  generate-results:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout benchmarking
+      uses: actions/checkout@v4
+      with:
+          # We need to explicitly specify "main" because it might be more recent
+          # than when the entire workflow was kicked off.
+        ref: main
+    - name: Checkout CPython
+      uses: actions/checkout@v4
+      with:
+        repository: python/cpython
+        path: cpython
+    - name: Setup system Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: pip
+    - name: Install dependencies from PyPI
+      run: python -m pip install -r requirements.txt
+    - name: Regenerate derived data
+      run: python -m bench_runner generate_results ${{ inputs.force == true && '--force'
+        || '' }}
+    - name: Add to repo
+      uses: EndBug/add-and-commit@v9
+      if: ${{ !inputs.dry_run }}
+      with:
+        add: "['results', 'README.md', 'RESULTS.md', 'longitudinal.png', 'longitudinal.json',
+          'profiling/profiling.png', 'profiling/profiling.md']"
+        message: Benchmarking results for @${{ github.actor }}

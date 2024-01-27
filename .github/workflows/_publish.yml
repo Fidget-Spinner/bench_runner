@@ -1,0 +1,48 @@
+# Generated file: !!! DO NOT EDIT !!!
+---
+env:
+  PYPERFORMANCE_HASH: f7f36509e2e81e9a20cfeadddd6608f2378ff26c
+  PYSTON_BENCHMARKS_HASH: ee8adbd7846ec67d1a8a362e6a5e876df372431d
+name: _publish
+on:
+  workflow_call:
+    inputs:
+      dry_run:
+        type: boolean
+        default: false
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run: Do not commit to the repo'
+        type: boolean
+        default: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout benchmarking
+      uses: actions/checkout@v4
+      with:
+        path: private
+        ref: main
+        fetch-depth: 0
+    - name: Checkout benchmarking-public
+      uses: actions/checkout@v4
+      with:
+        path: public
+        ref: main
+        repository: ${{ github.repository }}-public
+        token: ${{ secrets.BENCHMARK_MIRROR }}
+    - name: Mirror
+      run: |
+        cd public
+        git remote add upstream $PWD/../private
+        git fetch upstream
+        git reset --hard upstream/main
+    - name: Push
+      if: ${{ !inputs.dry_run }}
+      run: |
+        cd public
+        git push origin main
